@@ -1,0 +1,13 @@
+# Lista zależności pip
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+psycopg2-binary
+python-jose
+passlib
+PyYAML
+zeep
+requests
+datasets
+pandas
