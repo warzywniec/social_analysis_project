@@ -1,13 +1,23 @@
 # Lista zależności pip
+# fastapi
+# uvicorn
+# sqlalchemy
+# pydantic
+# psycopg2-binary
+# python-jose
+# passlib
+# PyYAML
+# zeep
+# requests
+# datasets
+# pandas
 fastapi
 uvicorn
 sqlalchemy
 pydantic
-psycopg2-binary
-python-jose
-passlib
-PyYAML
-zeep
-requests
-datasets
-pandas
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+fastapi
+uvicorn
+sqlalchemy

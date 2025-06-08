@@ -1,21 +1,14 @@
-# app/db/session.py
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Możesz zmienić na PostgreSQL np. "postgresql://user:pass@localhost/db"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+DATABASE_URL = "sqlite:///./app.db"  # Możesz to wrzucić do `.env`
 
-# SQLite: trzeba dodać check_same_thread
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-
-# Factory do tworzenia sesji
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Bazowa klasa dla modeli ORM
 Base = declarative_base()
+
 
 # Dependency do FastAPI – injekcja sesji
 def get_db():
@@ -24,3 +17,4 @@ def get_db():
         yield db
     finally:
         db.close()
+
