@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import func
 
 from app.db.session import SessionLocal
 from app.models.headline import Headline
@@ -8,6 +9,9 @@ from app.models.site import Site
 from app.schemas.headline import HeadlineSchema
 from app.schemas.site import SiteSchema
 from app.auth.dependencies import get_current_user
+
+from app.export_import.exporter import export_headlines_to_json, export_headlines_to_xml
+from app.export_import.importer import import_headlines_from_json, import_headlines_from_xml
 
 router = APIRouter()
 
@@ -21,21 +25,107 @@ def get_db():
 # HEADLINES
 
 @router.get("/headlines/", response_model=List[HeadlineSchema])
-def get_headlines(date: Optional[str] = None, emotion: Optional[str] = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_headlines(
+    date: Optional[str] = Query(None, description="Exact year, e.g., '2022'"),
+    emotion: Optional[str] = Query(None, description="Emotion, e.g., 'anger'"),
+    headline_contains: Optional[str] = Query(None, description="Search in headline"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
     query = db.query(Headline)
+
     if date:
         query = query.filter(Headline.date == date)
     if emotion:
         query = query.filter(Headline.emotion == emotion)
-    return query.all()
+    if headline_contains:
+        query = query.filter(Headline.headline.ilike(f"%{headline_contains}%"))
+
+    return query.offset(skip).limit(limit).all()
+
 
 # SITES
 
 @router.get("/sites/", response_model=List[SiteSchema])
-def get_sites(date: Optional[str] = None, category: Optional[str] = None, db: Session = Depends(get_db)):
+def get_sites(
+    date: Optional[str] = Query(None, description="Year, e.g., '2022'"),
+    category: Optional[str] = Query(None, description="Exact category name"),
+    category_contains: Optional[str] = Query(None, description="Partial category match"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
     query = db.query(Site)
+
     if date:
         query = query.filter(Site.date == date)
     if category:
         query = query.filter(Site.category == category)
-    return query.all()
+    if category_contains:
+        query = query.filter(Site.category.ilike(f"%{category_contains}%"))
+
+    return query.offset(skip).limit(limit).all()
+
+
+@router.get("/emotion-summary/")
+def get_emotion_summary(
+    year: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    emotion: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    query = (
+        db.query(
+            Site.category,
+            Site.date,
+            Headline.emotion,
+            func.count(Headline.id).label("count")
+        )
+        .join(Headline, Headline.site_id == Site.id)
+    )
+
+    if year:
+        query = query.filter(Site.date == year)
+    if category:
+        query = query.filter(Site.category == category)
+    if emotion:
+        query = query.filter(Headline.emotion == emotion)
+
+    result = (
+        query.group_by(Site.category, Site.date, Headline.emotion)
+             .order_by(Site.category, Site.date, Headline.emotion)
+             .all()
+    )
+
+    return [
+        {
+            "category": row[0],
+            "year": row[1],
+            "emotion": row[2],
+            "count": row[3]
+        }
+        for row in result
+    ]
+
+@router.post("/export/json")
+def export_json(current_user=Depends(get_current_user)):
+    export_headlines_to_json()
+    return {"message": "Exported to JSON"}
+
+@router.post("/export/xml")
+def export_xml(current_user=Depends(get_current_user)):
+    export_headlines_to_xml()
+    return {"message": "Exported to XML"}
+
+@router.post("/import/json")
+def import_json(current_user=Depends(get_current_user)):
+    import_headlines_from_json()
+    return {"message": "Imported from JSON"}
+
+@router.post("/import/xml")
+def import_xml(current_user=Depends(get_current_user)):
+    import_headlines_from_xml()
+    return {"message": "Imported from XML"}

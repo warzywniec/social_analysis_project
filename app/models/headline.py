@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 class Headline(Base):
@@ -8,3 +9,6 @@ class Headline(Base):
     headline = Column(String, nullable=False)
     date = Column(String, nullable=False)
     emotion = Column(String, nullable=False)
+
+    site_id = Column(Integer, ForeignKey("sites.id"))
+    site = relationship("Site", back_populates="headlines")
