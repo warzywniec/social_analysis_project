@@ -13,6 +13,12 @@ from app.auth.dependencies import get_current_user
 from app.export_import.exporter import export_headlines_to_json, export_headlines_to_xml
 from app.export_import.importer import import_headlines_from_json, import_headlines_from_xml
 
+from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from app.models.user import User
+from app.schemas.user import UserCreate, Token
+from app.auth.utils import get_password_hash, verify_password, create_access_token
+
 router = APIRouter()
 
 def get_db():
@@ -129,3 +135,34 @@ def import_json(current_user=Depends(get_current_user)):
 def import_xml(current_user=Depends(get_current_user)):
     import_headlines_from_xml()
     return {"message": "Imported from XML"}
+
+# Przekierowanie z / na /login
+@router.get("/", include_in_schema=False)
+def redirect_root():
+    return RedirectResponse(url="/login")
+
+# Rejestracja użytkownika
+@router.post("/register", response_model=Token)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        return {"access_token": "", "token_type": "bearer"}  # Można też rzucić HTTPException
+
+    hashed_pw = get_password_hash(user.password)
+    new_user = User(username=user.username, hashed_password=hashed_pw)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    token = create_access_token({"sub": new_user.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+# Logowanie użytkownika
+@router.post("/login", response_model=Token)
+def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        return {"access_token": "", "token_type": "bearer"}  # lub raise HTTPException(...)
+    
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
