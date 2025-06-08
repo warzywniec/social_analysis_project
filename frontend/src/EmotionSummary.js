@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 export default function EmotionSummary() {
   const [filters, setFilters] = useState({
     year: "",
@@ -15,7 +14,8 @@ export default function EmotionSummary() {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const fetchSummary = async () => {
+  const fetchSummary = async (e) => {
+    e.preventDefault();
     const params = new URLSearchParams();
     if (filters.year) params.append("year", filters.year);
     if (filters.category) params.append("category", filters.category);
@@ -36,30 +36,48 @@ export default function EmotionSummary() {
 
   return (
     <div>
-        <div style={{ position: "absolute", top: 10, right: 10 }}>
-  <button onClick={() => navigate("/main")}>Powrót do strony głównej</button>
-</div>
+      <div style={{ position: "absolute", top: 10, right: 10 }}>
+        <button onClick={() => navigate("/main")}>Powrót do strony głównej</button>
+      </div>
 
       <h2>Emotion Summary</h2>
-      <input
-        name="year"
-        placeholder="Year"
-        value={filters.year}
-        onChange={handleChange}
-      />
-      <input
-        name="category"
-        placeholder="Category"
-        value={filters.category}
-        onChange={handleChange}
-      />
-      <input
-        name="emotion"
-        placeholder="Emotion"
-        value={filters.emotion}
-        onChange={handleChange}
-      />
-      <button onClick={fetchSummary}>Wyświetl rezultaty</button>
+
+      <form onSubmit={fetchSummary} style={{ marginBottom: "1rem" }}>
+        <div>
+          <label>
+            Rok:{" "}
+            <input
+              name="year"
+              placeholder="np. 2022"
+              value={filters.year}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Kategoria:{" "}
+            <input
+              name="category"
+              placeholder="np. politics"
+              value={filters.category}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Emocja:{" "}
+            <input
+              name="emotion"
+              placeholder="np. anger"
+              value={filters.emotion}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+        <button type="submit">Wyświetl rezultaty</button>
+      </form>
 
       <ul>
         {results.map((row, index) => (

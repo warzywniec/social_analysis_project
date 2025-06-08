@@ -18,10 +18,9 @@ def import_headlines_from_json(filepath="app/export/headlines.json"):
             db.commit()
             db.refresh(site)
 
-        # Sprawdzenie duplikatu
         existing = db.query(Headline).filter_by(headline=item["headline"], site_id=site.id).first()
         if existing:
-            continue  # pomijamy import duplikatu
+            continue
 
         headline = Headline(
             headline=item["headline"],
@@ -55,7 +54,6 @@ def import_headlines_from_xml(filepath="app/export/headlines.xml"):
             db.commit()
             db.refresh(site)
 
-        # Sprawdzenie duplikatu
         existing = db.query(Headline).filter_by(headline=headline_text, site_id=site.id).first()
         if existing:
             continue

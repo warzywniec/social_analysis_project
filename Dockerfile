@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Dodaj sqlite3 + inne zależności
 RUN apt update && apt install -y sqlite3 libsqlite3-dev gcc
 
 

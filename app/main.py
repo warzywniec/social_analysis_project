@@ -1,13 +1,3 @@
-# from fastapi import FastAPI
-# from app.api import rest, soap, analysis
-
-# app = FastAPI(title="Social & News API Mock")
-
-# # Rejestracja endpointów
-# app.include_router(rest.router)
-# app.include_router(soap.router)
-# app.include_router(analysis.router)
-
 from fastapi import FastAPI
 from app.db.init_db import init_db
 from app.services.headline_loader import load_headlines_from_csv
@@ -29,7 +19,7 @@ def root():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # lub ["http://localhost:3000"] żeby ograniczyć
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -16,7 +16,7 @@ export default function Register() {
     const data = await response.json();
     if (data.access_token) {
       alert("Zarejestrowano!");
-      navigate("/"); // po rejestracji wracamy do logowania
+      navigate("/");
     } else {
       alert("Błąd rejestracji");
     }

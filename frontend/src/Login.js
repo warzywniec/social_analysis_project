@@ -15,7 +15,7 @@ export default function Login() {
     });
     const data = await response.json();
     if (data.access_token) {
-        localStorage.setItem("token", data.access_token); // ✅ zapisz token
+        localStorage.setItem("token", data.access_token);
         alert("Zalogowano!");
         navigate("/main");
       } else {
